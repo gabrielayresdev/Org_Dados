@@ -20,7 +20,8 @@ st.markdown(
     /* Fonte padrão personalizada */
     html, body, [class*="css"] {
         font-family: 'Roboto', sans-serif;
-        color: #e4101f;
+        color: #FFFFFF;
+        font-size = 20px;
         font-weight: bold;
     }
 
@@ -61,16 +62,12 @@ st.markdown(
         color: #FFFFFF; 
         font-size: 20px;
         font-weight: bold;
+        transform: scale(1.08);
     }
     .stButton>button:active {
         background-color: #a30000;
-        transform: scale(0.98);
+        transform: scale(1);
         color: #F0F0F0; 
-    }
-    .stButton>button.pressed {
-        background-color: #a30000;
-        transform: scale(0.98);
-        color: #F0F0F0;
     }
     .button-container {
         text-align: center;
@@ -241,7 +238,7 @@ with st.container():
 
 # Exibir o gráfico conforme a opção do usuário
 if option == "Numero_de_filmes_por_pais":
-    st.markdown('<p class="custom-subheader">🎬 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎬 Número de Filmes e Séries por País</p>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(10, 6))
     shows_count[:20].plot(kind='barh', color='#db0000', ax=ax)
     ax.set_title('Número de Filmes e Séries por País')
@@ -249,9 +246,10 @@ if option == "Numero_de_filmes_por_pais":
     ax.set_ylabel('Países')
     ax.invert_yaxis()
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos no gráfico que os Estados Unidos são dominantes na Netflix, seguido pela Índia. Vemos que o Brasil possui poucos filmes e séries originais.</p>', unsafe_allow_html=True)
 
 elif option == "Generos_de_filmes":
-    st.markdown('<p class="custom-subheader">🎬 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎥 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(10, 6))
     movie_genres[:20].plot(kind='barh', color='#db0000', ax=ax)
     ax.set_title('Gêneros Mais Populares em Filmes')
@@ -259,6 +257,8 @@ elif option == "Generos_de_filmes":
     ax.set_ylabel('Gêneros')
     ax.invert_yaxis()
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos nesse gráfico que o foco das séries da Netflix são as internacionais que são feitas para pessoas de todo o globo e de grande orçamento, além disso vimos uma alta em filmes de comédia, ação e aventura, documentários e filmes para a família. Vale destacar também o espaço dado para produções independentes</p>', unsafe_allow_html=True)
+
 
 elif option == "Generos_de_series":
     st.markdown('<p class="custom-subheader">📺 Gêneros Mais Populares em Séries</p>', unsafe_allow_html=True)
@@ -269,6 +269,8 @@ elif option == "Generos_de_series":
     ax.set_ylabel('Gêneros')
     ax.invert_yaxis()
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos nesse gráfico que o foco das séries da Netflix são séries internacionais que são feitas para pessoas de todo o globo, além disso vimos programas de comédias em alta, dramas, séries criminais e romances.</p>', unsafe_allow_html=True)
+
 
 elif option == "WordCloud_de_diretores":
     # Gerando a WordCloud
@@ -279,6 +281,8 @@ elif option == "WordCloud_de_diretores":
     plt.imshow(wordcloud_diretores, interpolation='bilinear')
     plt.axis('off')
     st.pyplot(plt)
+    st.markdown('<p class="css">Percebemos que o fato da Netflix ser uma empresa globalizada os seus produtos contém diretores do mundo todo.</p>', unsafe_allow_html=True)
+
 
 elif option == "WordCloud_de_atores":
     # Foi preciso criar com base na frequêcia, caso contrário, nome e sobrenome seriam considerados palavras diferentes
@@ -290,6 +294,7 @@ elif option == "WordCloud_de_atores":
     plt.axis('off')
     plt.show()
     st.pyplot(plt)
+    st.markdown('<p class="css">Percebemos que o fato da Netflix ser uma empresa globalizada os seus produtos contém atores do mundo todo, assim como diretores, destaque para atores indianos, britânicos.</p>', unsafe_allow_html=True)
 
 elif option == "filmes_vs_series":
     st.markdown('<p class="custom-subheader">Filmes vs Séries</p>', unsafe_allow_html=True)
@@ -303,6 +308,7 @@ elif option == "filmes_vs_series":
               frameon=True, loc='upper left', facecolor='lightgray', edgecolor='black')
 
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos que a Netflix tem focado na produção e compra de direitos de filmes.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_ano":
     st.markdown('<p class="custom-subheader">Produções por ano</p>', unsafe_allow_html=True)
@@ -311,10 +317,12 @@ elif option == "producoes_por_ano":
     ax.set_title('Número de Produções por Ano', fontsize=14)
     ax.set_xlabel('Ano', fontsize=12)
     ax.set_ylabel('Número de Produções', fontsize=12)
+    ax.set_xticks(contagem_por_ano.index)
     ax.set_xticklabels(contagem_por_ano.index, rotation=45)
 
     plt.tight_layout()
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos que o ano de 2019 foi o ano com maior número de produções da Netflix, vemos também que a pandemia afetou as produções fazendo com que 2021 tenha tido uma produção menor que 2018.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_classificacao_indicativa":
     st.markdown('<p class="custom-subheader">Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
@@ -329,3 +337,4 @@ elif option == "producoes_por_classificacao_indicativa":
 
     plt.tight_layout()
     st.pyplot(fig)
+    st.markdown('<p class="css">Percebemos que a Netflix tem como foco o público adulto e adolescentes a partir dos doze anos e que o público que menos recebe conteúdo é o infantil.</p>', unsafe_allow_html=True)
