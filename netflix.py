@@ -1,7 +1,11 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import plotly.express as px
 from wordcloud import WordCloud
+import numpy as np
+from PIL import Image
+import io
 
 # Configuração inicial do Streamlit
 st.set_page_config(page_title="Análise Netflix", layout="centered")
@@ -114,17 +118,17 @@ shows = shows.assign(listed_in=shows['listed_in'].str.split(', ')).explode('list
 movie_genres = movies['listed_in'].value_counts()
 show_genres = shows['listed_in'].value_counts()
 
+def calcular_frequencias(texto):
+    frequencias = {}
+    for nome in texto.split():
+        nome_corrigido = nome.replace("_", " ")  # Restaurar espaços
+        frequencias[nome_corrigido] = frequencias.get(nome_corrigido, 0) + 1
+    return frequencias
+
 # Removendo nulls e tratando diretores
 diretores = data.dropna(subset=['director'])
 diretores = diretores.assign(director=diretores['director'].str.split(', ')).explode('director')
 diretores.loc[:, "nome_com_underline"] = diretores["director"].str.replace(" ", "_")
-
-# Contando a frequência dos nomes
-texto = " ".join(diretores["nome_com_underline"])
-frequencias = {}
-for nome in texto.split():
-    nome_corrigido = nome.replace("_", " ")  # Restaurar espaços
-    frequencias[nome_corrigido] = frequencias.get(nome_corrigido, 0) + 1
 
 
 # removendo nulls
@@ -136,10 +140,7 @@ elenco.loc[:, "nome_com_underline"] = elenco["cast"].str.replace(" ", "_")
 
 texto = " ".join(elenco["nome_com_underline"])
 
-frequencias = {}
-for nome in texto.split():
-    nome_corrigido = nome.replace("_", " ")  # Restaurar espaços
-    frequencias[nome_corrigido] = frequencias.get(nome_corrigido, 0) + 1
+
 
 
 # Remover inconsistências
@@ -178,14 +179,14 @@ classificacao_convertida = {
     'TV-MA': '18+', 'NC-17': '18+'
 }
 
-# Mapear a classificação no DataFrame
+# Mapear a classificação no DataFrame (substitua 'data' se necessário)
 data['rating_category'] = data['rating'].map(classificacao_convertida)
 
-# Filtrando os dados dos últimos anos
-df_ultimos_anos = data[data['ano'] >= 2011]
+# Tratar valores ausentes (se houver)
+data['rating_category'] = data['rating_category'].fillna('Desconhecido')
 
 # Contagem por ano e classificação
-classification_counts = df_ultimos_anos.groupby(['ano', 'rating_category']).size().unstack(fill_value=0)
+classification_counts = data.groupby(['ano', 'rating_category']).size().unstack(fill_value=0)
 
 # Definindo as cores para as classificações
 cores_classificacao = {
@@ -194,7 +195,8 @@ cores_classificacao = {
     '12+': 'yellow',
     '14+': 'orange',
     '16+': 'red',
-    '18+': 'black'
+    '18+': 'black',
+    'Desconhecido': 'gray'
 }
 
 # Criar os botões customizados
@@ -236,105 +238,259 @@ with st.container():
         if st.button("Produções por classificação indicativa"):
             option = "producoes_por_classificacao_indicativa"
 
-# Exibir o gráfico conforme a opção do usuário
 if option == "Numero_de_filmes_por_pais":
     st.markdown('<p class="custom-subheader">🎬 Número de Filmes e Séries por País</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    shows_count[:20].plot(kind='barh', color='#db0000', ax=ax)
-    ax.set_title('Número de Filmes e Séries por País')
-    ax.set_xlabel('Quantidade de Filmes e Séries')
-    ax.set_ylabel('Países')
-    ax.invert_yaxis()
-    st.pyplot(fig)
+    
+    fig = px.bar(shows_count.head(20), 
+                 x=shows_count.head(20).values, 
+                 y=shows_count.head(20).index, 
+                 orientation='h', 
+                 color=shows_count.head(20).values, 
+                 color_continuous_scale='reds', 
+                 labels={'x': 'Quantidade de Filmes e Séries', 'y': 'Países'}, 
+                 title='Número de Filmes e Séries por País')
+
+    fig.update_layout(
+        xaxis_title='Quantidade de Filmes e Séries',
+        yaxis_title='Países',
+        plot_bgcolor='#141414',
+        title_x=0.5,
+        title_font=dict(size=20, color='#e4101f'),
+        paper_bgcolor='#141414',
+        font=dict(color='white')
+    )
+
+    # Exibir o gráfico interativo no Streamlit
+    st.plotly_chart(fig)
     st.markdown('<p class="css">Percebemos no gráfico que os Estados Unidos são dominantes na Netflix, seguido pela Índia. Vemos que o Brasil possui poucos filmes e séries originais.</p>', unsafe_allow_html=True)
 
 elif option == "Generos_de_filmes":
     st.markdown('<p class="custom-subheader">🎥 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    movie_genres[:20].plot(kind='barh', color='#db0000', ax=ax)
-    ax.set_title('Gêneros Mais Populares em Filmes')
-    ax.set_xlabel('Quantidade de Filmes')
-    ax.set_ylabel('Gêneros')
-    ax.invert_yaxis()
-    st.pyplot(fig)
+
+    genre_df = movie_genres[:20].reset_index()
+    genre_df.columns = ['Gênero', 'Quantidade']
+    
+    fig = px.bar(genre_df, 
+                 x='Quantidade', 
+                 y='Gênero', 
+                 orientation='h',
+                 color='Quantidade',
+                 color_continuous_scale='reds',
+                 labels={'Quantidade': 'Quantidade de Filmes', 'Gênero': 'Gêneros'},
+                 title='Gêneros Mais Populares em Filmes')
+    fig.update_layout(
+        plot_bgcolor='#141414',
+        title_x=0.5,
+        title_font=dict(size=20, color='#e4101f'),
+        paper_bgcolor='#141414',
+        font=dict(color='white')
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos nesse gráfico que o foco das séries da Netflix são as internacionais que são feitas para pessoas de todo o globo e de grande orçamento, além disso vimos uma alta em filmes de comédia, ação e aventura, documentários e filmes para a família. Vale destacar também o espaço dado para produções independentes</p>', unsafe_allow_html=True)
 
 
 elif option == "Generos_de_series":
     st.markdown('<p class="custom-subheader">📺 Gêneros Mais Populares em Séries</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    show_genres[:20].plot(kind='barh', color='#db0000', ax=ax)
-    ax.set_title('Gêneros Mais Populares em Séries')
-    ax.set_xlabel('Quantidade de Séries')
-    ax.set_ylabel('Gêneros')
-    ax.invert_yaxis()
-    st.pyplot(fig)
+    series_genre_df = show_genres[:20].reset_index()
+    series_genre_df.columns = ['Gênero', 'Quantidade']
+    
+    fig = px.bar(series_genre_df, 
+                 x='Quantidade', 
+                 y='Gênero', 
+                 orientation='h',
+                 color='Quantidade',
+                 color_continuous_scale='reds',
+                 labels={'Quantidade': 'Quantidade de Séries', 'Gênero': 'Gêneros'},
+                 title='Gêneros Mais Populares em Séries')
+    fig.update_layout(
+        plot_bgcolor='#141414',
+        title_x=0.5,
+        title_font=dict(size=20, color='#e4101f'),
+        paper_bgcolor='#141414',
+        font=dict(color='white')
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos nesse gráfico que o foco das séries da Netflix são séries internacionais que são feitas para pessoas de todo o globo, além disso vimos programas de comédias em alta, dramas, séries criminais e romances.</p>', unsafe_allow_html=True)
 
 
 elif option == "WordCloud_de_diretores":
-    # Gerando a WordCloud
-    wordcloud_diretores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(frequencias)
-    # Exibindo a WordCloud
     st.markdown('<p class="custom-subheader">🌐 Nuvem de Palavras dos Diretores</p>', unsafe_allow_html=True)
-    plt.figure(figsize=(12, 6))
-    plt.imshow(wordcloud_diretores, interpolation='bilinear')
-    plt.axis('off')
-    st.pyplot(plt)
+    wordcloud_diretores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(calcular_frequencias(" ".join(diretores["nome_com_underline"])))
+
+    image = wordcloud_diretores.to_image()
+    img_array = np.array(image)
+
+    fig = px.imshow(img_array)
+    fig.update_layout(
+        title='Nuvem de Palavras dos Diretores',
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False),
+        coloraxis_showscale=False
+    )
+    fig.update_layout(
+        title_x=0.5,
+        title_font=dict(size=20, color='#e4101f'),
+        paper_bgcolor='#141414',
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos que o fato da Netflix ser uma empresa globalizada os seus produtos contém diretores do mundo todo.</p>', unsafe_allow_html=True)
 
 
 elif option == "WordCloud_de_atores":
-    # Foi preciso criar com base na frequêcia, caso contrário, nome e sobrenome seriam considerados palavras diferentes
-    wordcloud_atores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(frequencias)
+    wordcloud_atores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(calcular_frequencias(" ".join(elenco["nome_com_underline"])))
 
-    st.markdown('<p class="custom-subheader">🙎‍♂️ Nuvem de Palavras dos Atores</p>', unsafe_allow_html=True)
-    plt.figure(figsize=(12, 6))
-    plt.imshow(wordcloud_atores, interpolation='bilinear')
-    plt.axis('off')
-    plt.show()
-    st.pyplot(plt)
+    image = wordcloud_atores.to_image()
+    img_array = np.array(image)
+
+    fig = px.imshow(img_array)
+    fig.update_layout(
+        title='Nuvem de Palavras dos Diretores',
+        xaxis=dict(showticklabels=False),
+        yaxis=dict(showticklabels=False),
+        coloraxis_showscale=False
+    )
+    fig.update_layout(
+        title_x=0.5,
+        title_font=dict(size=20, color='#e4101f'),
+        paper_bgcolor='#141414',
+    )
+    
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos que o fato da Netflix ser uma empresa globalizada os seus produtos contém atores do mundo todo, assim como diretores, destaque para atores indianos, britânicos.</p>', unsafe_allow_html=True)
 
 elif option == "filmes_vs_series":
     st.markdown('<p class="custom-subheader">Filmes vs Séries</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(10, 6))  # Criar uma figura para o gráfico
-    ax = data_dez_anos.plot(kind='bar', ax=ax, width=0.8, color=['black', '#db0000'])
-    ax.set_title('Produções por Ano (Filmes vs Séries)', fontsize=14)
-    ax.set_xlabel('Ano', fontsize=12)
-    ax.set_ylabel('Quantidade de Produções', fontsize=12)
-    ax.set_xticklabels(data_dez_anos.index, rotation=45)
-    ax.legend(title='Tipo de Produção', title_fontsize='13', labels=['Filmes', 'Séries'], fontsize='11', 
-              frameon=True, loc='upper left', facecolor='lightgray', edgecolor='black')
+    filmes_series_por_ano = data.groupby(['ano', 'type']).size().reset_index(name='quantidade')
 
-    st.pyplot(fig)
+    color_map = {"Movie": "#e4101f", "TV Show": "#ffffff"}
+
+    fig = px.bar(
+        filmes_series_por_ano,
+        x="ano",
+        y="quantidade",
+        color="type",
+        barmode="group",
+        text="quantidade",
+        title="Distribuição de Filmes e Séries por Ano",
+        labels={"quantidade": "Quantidade", "ano": "Ano", "type": "Tipo"},
+        orientation="v",
+        color_discrete_map=color_map
+    )
+    fig.update_layout(
+        xaxis_title="Ano",
+        yaxis_title="Quantidade",
+        legend_title="Tipo",
+        template="plotly_dark",
+        plot_bgcolor='#141414',
+        paper_bgcolor='#141414',
+        font=dict(color='white'),
+        title_font=dict(size=20, color='#e4101f'),
+        title_x=0.5,
+        bargap=0.2,
+        xaxis=dict(
+            range=[2008, 2022],
+            tickmode='linear',
+            tick0=2008,
+            dtick=1,
+        ),
+        legend=dict(
+            title="Tipo",
+            font=dict(color="white"),
+            bgcolor="#141414",
+        )
+    )
+    fig.update_traces(
+        textposition='outside',
+        texttemplate='%{text}',
+        hoverinfo="x+y+name",
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos que a Netflix tem focado na produção e compra de direitos de filmes.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_ano":
-    st.markdown('<p class="custom-subheader">Produções por ano</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(10, 6))
-    ax.bar(contagem_por_ano.index, contagem_por_ano, color='#db0000')
-    ax.set_title('Número de Produções por Ano', fontsize=14)
-    ax.set_xlabel('Ano', fontsize=12)
-    ax.set_ylabel('Número de Produções', fontsize=12)
-    ax.set_xticks(contagem_por_ano.index)
-    ax.set_xticklabels(contagem_por_ano.index, rotation=45)
+    st.markdown('<p class="custom-subheader">Produções por Ano</p>', unsafe_allow_html=True)
 
-    plt.tight_layout()
-    st.pyplot(fig)
+    producoes_por_ano = data['ano'].value_counts().reset_index()
+    producoes_por_ano.columns = ['ano', 'quantidade']
+    producoes_por_ano = producoes_por_ano.sort_values(by='ano')
+
+    fig = px.bar(
+        producoes_por_ano,
+        x="ano",
+        y="quantidade",
+        title="Quantidade de Produções por Ano",
+        labels={"quantidade": "Quantidade", "ano": "Ano"},
+        text="quantidade",
+    )
+    fig.update_layout(
+        xaxis_title="Ano",
+        yaxis_title="Quantidade",
+        template="plotly_dark",
+        plot_bgcolor='#141414',
+        paper_bgcolor='#141414',
+        font=dict(color='white'),
+        title_font=dict(size=20, color='#e4101f'),
+        title_x=0.5,  # Centraliza o título
+        xaxis=dict(
+            range=[2008, 2022],
+            tickmode='linear',
+            tick0=2008,
+            dtick=1,
+        ),
+    )
+    fig.update_traces(
+        textposition='outside',
+        texttemplate='%{text}',
+        marker_color='#e4101f',
+        marker_line_color='white',
+        marker_line_width=1.5,
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos que o ano de 2019 foi o ano com maior número de produções da Netflix, vemos também que a pandemia afetou as produções fazendo com que 2021 tenha tido uma produção menor que 2018.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_classificacao_indicativa":
     st.markdown('<p class="custom-subheader">Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
-    fig, ax = plt.subplots(figsize=(12, 8))
-    classification_counts.plot(kind='bar', stacked=False, ax=ax, width=0.8,
-                               color=[cores_classificacao.get(x, 'gray') for x in classification_counts.columns])
-    ax.set_title('Produções por Ano e Classificação Indicativa', fontsize=14)
-    ax.set_xlabel('Ano', fontsize=12)
-    ax.set_ylabel('Quantidade de Produções', fontsize=12)
-    ax.set_xticklabels(classification_counts.index, rotation=45)
-    ax.legend(title="Classificação Indicativa", bbox_to_anchor=(1.05, 1), loc='upper left', fontsize=10)
+    
+    classification_counts = classification_counts.reset_index()
 
-    plt.tight_layout()
-    st.pyplot(fig)
+    fig = px.bar(
+        classification_counts,
+        x="ano",
+        y=classification_counts.columns[1:],
+        title="Produções por Ano e Classificação Indicativa",
+        labels={"ano": "Ano", "value": "Quantidade de Produções", "rating_category": "Classificação Indicativa"},
+        color_discrete_map=cores_classificacao,
+        barmode='stack',
+        text_auto=True
+    )
+    fig.update_layout(
+        xaxis_title="Ano",
+        yaxis_title="Quantidade de Produções",
+        template="plotly_dark",
+        plot_bgcolor='#141414',
+        paper_bgcolor='#141414',
+        font=dict(color='white'),
+        title_font=dict(size=20, color='#e4101f'),
+        title_x=0.5,
+        legend_title="Classificação Indicativa",
+        bargap=0.2,
+        xaxis=dict(
+            range=[2008, 2022],
+            tickmode='linear',
+            tick0=2008,
+            dtick=1,
+        ),
+        legend=dict(
+            title="Tipo",
+            font=dict(color="white"),
+            bgcolor="#141414",
+        )
+    )
+
+    st.plotly_chart(fig, use_container_width=True)
     st.markdown('<p class="css">Percebemos que a Netflix tem como foco o público adulto e adolescentes a partir dos doze anos e que o público que menos recebe conteúdo é o infantil.</p>', unsafe_allow_html=True)
