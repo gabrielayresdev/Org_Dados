@@ -25,7 +25,7 @@ st.markdown(
     html, body, [class*="css"] {
         font-family: 'Roboto', sans-serif;
         color: #FFFFFF;
-        font-size = 20px;
+        font-size: 20px;
         font-weight: bold;
     }
 
@@ -239,7 +239,7 @@ with st.container():
             option = "producoes_por_classificacao_indicativa"
 
 if option == "Numero_de_filmes_por_pais":
-    st.markdown('<p class="custom-subheader">🎬 Número de Filmes e Séries por País</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🌍 Número de Filmes e Séries por País</p>', unsafe_allow_html=True)
     
     fig = px.bar(shows_count.head(20), 
                  x=shows_count.head(20).values, 
@@ -265,7 +265,7 @@ if option == "Numero_de_filmes_por_pais":
     st.markdown('<p class="css">Percebemos no gráfico que os Estados Unidos são dominantes na Netflix, seguido pela Índia. Vemos que o Brasil possui poucos filmes e séries originais.</p>', unsafe_allow_html=True)
 
 elif option == "Generos_de_filmes":
-    st.markdown('<p class="custom-subheader">🎥 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎬 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
 
     genre_df = movie_genres[:20].reset_index()
     genre_df.columns = ['Gênero', 'Quantidade']
@@ -316,7 +316,7 @@ elif option == "Generos_de_series":
 
 
 elif option == "WordCloud_de_diretores":
-    st.markdown('<p class="custom-subheader">🌐 Nuvem de Palavras dos Diretores</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎥 Nuvem de Palavras dos Diretores</p>', unsafe_allow_html=True)
     wordcloud_diretores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(calcular_frequencias(" ".join(diretores["nome_com_underline"])))
 
     image = wordcloud_diretores.to_image()
@@ -340,6 +340,7 @@ elif option == "WordCloud_de_diretores":
 
 
 elif option == "WordCloud_de_atores":
+    st.markdown('<p class="custom-subheader">👨‍🎤 Nuvem de Palavras dos Diretores</p>', unsafe_allow_html=True)
     wordcloud_atores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(calcular_frequencias(" ".join(elenco["nome_com_underline"])))
 
     image = wordcloud_atores.to_image()
@@ -362,7 +363,7 @@ elif option == "WordCloud_de_atores":
     st.markdown('<p class="css">Percebemos que o fato da Netflix ser uma empresa globalizada os seus produtos contém atores do mundo todo, assim como diretores, destaque para atores indianos, britânicos.</p>', unsafe_allow_html=True)
 
 elif option == "filmes_vs_series":
-    st.markdown('<p class="custom-subheader">Filmes vs Séries</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎬 x 📺 Filmes vs Séries</p>', unsafe_allow_html=True)
     filmes_series_por_ano = data.groupby(['ano', 'type']).size().reset_index(name='quantidade')
 
     color_map = {"Movie": "#e4101f", "TV Show": "#ffffff"}
@@ -412,7 +413,7 @@ elif option == "filmes_vs_series":
     st.markdown('<p class="css">Percebemos que a Netflix tem focado na produção e compra de direitos de filmes.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_ano":
-    st.markdown('<p class="custom-subheader">Produções por Ano</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">📅 Produções por Ano</p>', unsafe_allow_html=True)
 
     producoes_por_ano = data['ano'].value_counts().reset_index()
     producoes_por_ano.columns = ['ano', 'quantidade']
@@ -451,10 +452,11 @@ elif option == "producoes_por_ano":
     )
 
     st.plotly_chart(fig, use_container_width=True)
+
     st.markdown('<p class="css">Percebemos que o ano de 2019 foi o ano com maior número de produções da Netflix, vemos também que a pandemia afetou as produções fazendo com que 2021 tenha tido uma produção menor que 2018.</p>', unsafe_allow_html=True)
 
 elif option == "producoes_por_classificacao_indicativa":
-    st.markdown('<p class="custom-subheader">Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🚸 Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
     
     classification_counts = classification_counts.reset_index()
 
