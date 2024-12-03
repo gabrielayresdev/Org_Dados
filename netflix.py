@@ -56,8 +56,8 @@ st.markdown(
         border: none;
         cursor: pointer;
         transition: background-color 0.3s ease;
-        width: 150px;
-        height: 150px;
+        width: 175px;
+        height: 175px;
         display: inline-block;
         margin-right: 10px;
     }
