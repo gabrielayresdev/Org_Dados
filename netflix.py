@@ -42,8 +42,8 @@ st.markdown(
 
     /* Classe para botão */
     .stButton>button {
-        background-color: #db0000; 
-        color: black; 
+        background-color: #564d4d; 
+        color: white; 
         font-size: 20px;
         font-weight: bold;
         border-radius: 5px; 
@@ -63,9 +63,8 @@ st.markdown(
         font-weight: bold;
     }
     .stButton>button:active {
-        background-color: #a30000;
         transform: scale(0.98);
-        color: #F0F0F0; 
+        color: #831010; 
     }
     .stButton>button.pressed {
         background-color: #a30000;
@@ -99,7 +98,7 @@ st.markdown('<p class = "css">Fonte do Dataset: <a href="https://www.kaggle.com/
 
 
 # Remover nulos e lidar com múltiplos países
-data['country'] = data['country'].fillna('Desconhecido')
+data = data.dropna(subset=['country'])
 data = data.assign(country=data['country'].str.split(', ')).explode('country')
 
 # Contar o número de shows por país
@@ -241,7 +240,8 @@ with st.container():
 
 # Exibir o gráfico conforme a opção do usuário
 if option == "Numero_de_filmes_por_pais":
-    st.markdown('<p class="custom-subheader">🎬 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🎬 Produção de filmes e séries por país</p>', unsafe_allow_html=True)
+    st.markdown('<p>Destacando os países que mais contribuíram para o catálogo da Netflix, o que pode ajudar a identificar tendências regionais e mercados estratégicos de produção. Nesse gráfico, percebemos que a grande maioria de filmes e séries é produzida nos Estados Unidos, seguido por Índia e Reino Unido. </p>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(10, 6))
     shows_count[:20].plot(kind='barh', color='#db0000', ax=ax)
     ax.set_title('Número de Filmes e Séries por País')
@@ -252,6 +252,7 @@ if option == "Numero_de_filmes_por_pais":
 
 elif option == "Generos_de_filmes":
     st.markdown('<p class="custom-subheader">🎬 Gêneros Mais Populares em Filmes</p>', unsafe_allow_html=True)
+    st.markdown('<p>Visualizando os gêneros mais frequentes em filmes, podemos chegar a conclusões sobre as preferências do público e áreas de maior investimento da plataforma. Com base nos dados analisados, podemos perceber que produções internacionais costumam obter um maior sucesso. Drama e comédia também demonstram ser bem populares entre os usuários.</p>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(10, 6))
     movie_genres[:20].plot(kind='barh', color='#db0000', ax=ax)
     ax.set_title('Gêneros Mais Populares em Filmes')
@@ -262,6 +263,7 @@ elif option == "Generos_de_filmes":
 
 elif option == "Generos_de_series":
     st.markdown('<p class="custom-subheader">📺 Gêneros Mais Populares em Séries</p>', unsafe_allow_html=True)
+    st.markdown('<p>Visualizando os gêneros mais frequentes em séries, podemos chegar a conclusões similares às obtidas no gráfico anterior. Semelhante ao gráfico de filmes mais populares, produções internacionais, dramas e comédia são os gêneros mais bem recebidos pelo público.</p>', unsafe_allow_html=True)
     fig, ax = plt.subplots(figsize=(10, 6))
     show_genres[:20].plot(kind='barh', color='#db0000', ax=ax)
     ax.set_title('Gêneros Mais Populares em Séries')
@@ -271,10 +273,12 @@ elif option == "Generos_de_series":
     st.pyplot(fig)
 
 elif option == "WordCloud_de_diretores":
+    
     # Gerando a WordCloud
     wordcloud_diretores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(frequencias)
     # Exibindo a WordCloud
-    st.markdown('<p class="custom-subheader">🌐 Nuvem de Palavras dos Diretores</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🌐 Diretores mais recorrentes</p>', unsafe_allow_html=True)
+    st.markdown('<p>Exibe os diretores mais recorrentes no catálogo por meio de uma nuvem de palavras em que, quanto maior o nome, maior a participação desse diretor nas produções da Netflix.', unsafe_allow_html=True)
     plt.figure(figsize=(12, 6))
     plt.imshow(wordcloud_diretores, interpolation='bilinear')
     plt.axis('off')
@@ -284,7 +288,8 @@ elif option == "WordCloud_de_atores":
     # Foi preciso criar com base na frequêcia, caso contrário, nome e sobrenome seriam considerados palavras diferentes
     wordcloud_atores = WordCloud(width=800, height=400, background_color='white').generate_from_frequencies(frequencias)
 
-    st.markdown('<p class="custom-subheader">🙎‍♂️ Nuvem de Palavras dos Atores</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">⭐ Atores mais recorrentes</p>', unsafe_allow_html=True)
+    st.markdown('<p>Exibe os atores mais recorrentes nos elencos do catálogo da Netflix. ', unsafe_allow_html=True)
     plt.figure(figsize=(12, 6))
     plt.imshow(wordcloud_atores, interpolation='bilinear')
     plt.axis('off')
@@ -292,7 +297,9 @@ elif option == "WordCloud_de_atores":
     st.pyplot(plt)
 
 elif option == "filmes_vs_series":
-    st.markdown('<p class="custom-subheader">Filmes vs Séries</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">📊Filmes vs Séries</p>', unsafe_allow_html=True)
+    st.markdown('<p>Comparando o número de filmes e séries lançados ao longo dos anos, é possível enxergar o aumento e o declínio de produções de ambos os tipos de mídia nos últimos anos. Através desse gráfico podemos perceber que a Netflix opta por incluir mais filmes em seu catálogo comparado ao número de séries.', unsafe_allow_html=True)
+
     fig, ax = plt.subplots(figsize=(10, 6))  # Criar uma figura para o gráfico
     ax = data_dez_anos.plot(kind='bar', ax=ax, width=0.8, color=['black', '#db0000'])
     ax.set_title('Produções por Ano (Filmes vs Séries)', fontsize=14)
@@ -305,7 +312,9 @@ elif option == "filmes_vs_series":
     st.pyplot(fig)
 
 elif option == "producoes_por_ano":
-    st.markdown('<p class="custom-subheader">Produções por ano</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">📅 Produções por ano</p>', unsafe_allow_html=True)
+    st.markdown('<p>Este gráfico reflete o crescimento geral do catálogo da Netflix ao longo dos anos, indicando períodos de maior intensidade na produção. Podemos perceber que o número de produções por ano aumentou até seu ápice em 2019 e então começou a reduzir. Talvez seja possível associar essa queda à pandemia.', unsafe_allow_html=True)
+
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.bar(contagem_por_ano.index, contagem_por_ano, color='#db0000')
     ax.set_title('Número de Produções por Ano', fontsize=14)
@@ -317,7 +326,9 @@ elif option == "producoes_por_ano":
     st.pyplot(fig)
 
 elif option == "producoes_por_classificacao_indicativa":
-    st.markdown('<p class="custom-subheader">Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-subheader">🔞 Produções por Classificação Indicativa</p>', unsafe_allow_html=True)
+    st.markdown('<p>Mostra como a produção de filmes e séries para diferentes classificações indicativas variou ao longo dos anos, refletindo mudanças no foco da plataforma. Nos anos de 2016 a 2021, a Netflix optou por adicionar mais títulos dedicados ao público adulto. ', unsafe_allow_html=True)
+
     fig, ax = plt.subplots(figsize=(12, 8))
     classification_counts.plot(kind='bar', stacked=False, ax=ax, width=0.8,
                                color=[cores_classificacao.get(x, 'gray') for x in classification_counts.columns])
